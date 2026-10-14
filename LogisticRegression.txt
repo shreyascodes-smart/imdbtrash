@@ -1,0 +1,112 @@
+import pandas as pd
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report
+)
+
+data = load_breast_cancer()
+
+df = pd.DataFrame(data.data, columns=data.feature_names)
+df["Diagnosis"] = data.target
+
+print("=" * 60)
+print("FIRST FIVE RECORDS")
+print("=" * 60)
+print(df.head())
+
+print("\nDataset Shape:", df.shape)
+print("\nTotal Features:", len(data.feature_names))
+
+print("\nTarget Classes")
+print("0 --> Malignant Cancer")
+print("1 --> Benign Cancer")
+
+X = df.drop("Diagnosis", axis=1)
+y = df["Diagnosis"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42
+)
+
+print("\nTraining Records:", len(X_train))
+print("Testing Records:", len(X_test))
+
+model = LogisticRegression(max_iter=5000)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+print("\n")
+print("=" * 60)
+print("MODEL PERFORMANCE")
+print("=" * 60)
+
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy: {:.2f}%".format(accuracy * 100))
+
+print("\nConfusion Matrix")
+print(confusion_matrix(y_test, y_pred))
+
+print("\nClassification Report")
+print(classification_report(y_test, y_pred))
+
+print("\n")
+print("=" * 60)
+print("AVAILABLE TEST RECORD NUMBERS")
+print("=" * 60)
+
+print(list(X_test.index))
+
+record = int(input("\nEnter Test Record Number: "))
+
+if record not in X_test.index:
+    print("\nInvalid Record Number")
+    print("Please enter one of the above record numbers.")
+
+else:
+    patient = X.loc[[record]]
+
+    print("\n")
+    print("=" * 60)
+    print("SELECTED PATIENT DETAILS")
+    print("=" * 60)
+    print(patient)
+
+    prediction = model.predict(patient)
+    probability = model.predict_proba(patient)
+
+    actual = y.loc[record]
+
+    predicted_result = "Benign"
+    if prediction[0] == 0:
+        predicted_result = "Malignant"
+
+    actual_result = "Benign"
+    if actual == 0:
+        actual_result = "Malignant"
+
+    print("\n")
+    print("=" * 60)
+    print("PREDICTION RESULT")
+    print("=" * 60)
+
+    print("Predicted Diagnosis:", predicted_result)
+    print("Actual Diagnosis:", actual_result)
+
+    if prediction[0] == actual:
+        print("\nPrediction Status: CORRECT")
+    else:
+        print("\nPrediction Status: INCORRECT")
+
+    print("\nPrediction Probability")
+    print("Malignant: {:.2f}%".format(probability[0][0] * 100))
+    print("Benign: {:.2f}%".format(probability[0][1] * 100))
